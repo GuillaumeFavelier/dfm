@@ -18,7 +18,7 @@ fn parse_cli(config: &mut config::Config) {
                 .long("dest")
                 .value_name("DEST")
                 .about("Specify the destination path")
-                .required(false))
+                .required(true))
             .arg(Arg::new("force")
                 .short('f')
                 .long("force")
