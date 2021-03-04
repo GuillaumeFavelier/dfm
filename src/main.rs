@@ -92,4 +92,7 @@ fn main() {
     if let Some(k) = &mut config.view {
         command::view(k);
     }
+    if let Some(k) = &mut config.link {
+        command::link(k);
+    }
 }

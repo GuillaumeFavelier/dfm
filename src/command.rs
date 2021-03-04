@@ -1,5 +1,7 @@
 use git2::Repository;
 use toml::Value;
+use shellexpand::{self};
+use std::os::unix::fs;
 use crate::config;
 
 pub fn clone(config: &config::CloneConfig) {
@@ -57,4 +59,38 @@ pub fn view(config: &mut config::ViewConfig) {
         }
         None => panic!("No configuration is loaded."),
     }
+}
+
+pub fn link(config: &mut config::LinkConfig) {
+    let load_config = match &mut config.load {
+        Some(i) => i,
+        None => panic!("No configuration is loaded."),
+    };
+
+    load(load_config);
+    let content = match &mut load_config.content {
+        Some(j) => j,
+        None => panic!("No content is found."),
+    };
+
+    if !content.is_table() {
+        return;
+    }
+    if let Value::Table(t) = content {
+        for (src, dst) in t {
+            let mut str_dst = shellexpand::full(dst.as_str().unwrap()).unwrap();
+            let mut src_path = std::path::PathBuf::new();
+            src_path.push(&load_config.path);
+            src_path.pop();
+            src_path.push(src.as_str());
+            match fs::symlink(src_path, str_dst.to_mut()) {
+                Ok(_) => (),
+                Err(_) => {
+                    println!("{} cannot be linked.", src);
+                    continue
+                }
+            }
+        }
+    }
+    println!("Linking is done.");
 }
