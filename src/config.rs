@@ -71,11 +71,16 @@ pub struct LinkConfig {
     pub load: Option<LoadConfig>,
 }
 
+pub struct UnlinkConfig {
+    pub load: Option<LoadConfig>,
+}
+
 pub struct Config {
     pub clone: Option<CloneConfig>,
     pub load: Option<LoadConfig>,
     pub view: Option<ViewConfig>,
     pub link: Option<LinkConfig>,
+    pub unlink: Option<UnlinkConfig>,
 }
 
 impl Config {
@@ -85,6 +90,7 @@ impl Config {
             load: None,
             view: None,
             link: None,
+            unlink: None,
         }
     }
 }

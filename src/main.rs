@@ -33,7 +33,15 @@ fn parse_cli(config: &mut config::Config) {
                 .about("Specify the index file path")
                 .required(false)))
         .subcommand(App::new("link")
-            .about("Create the links according to the loaded configuration")
+            .about("Create the links described in the configuration")
+            .arg(Arg::new("path")
+                .short('p')
+                .long("path")
+                .value_name("PATH")
+                .about("Specify the index file path")
+                .required(false)))
+        .subcommand(App::new("unlink")
+            .about("Remove the links described in the configuration")
             .arg(Arg::new("path")
                 .short('p')
                 .long("path")
@@ -70,6 +78,13 @@ fn parse_cli(config: &mut config::Config) {
             }
         )
     }
+    if let Some(_) = matches.subcommand_matches("unlink") {
+        config.unlink = Some(
+            config::UnlinkConfig{
+                load: Some(config::LoadConfig::new(matches.value_of("path")))
+            }
+        )
+    }
 }
 
 fn main() {
@@ -83,5 +98,8 @@ fn main() {
     }
     if let Some(k) = &mut config.link {
         command::link(k);
+    }
+    if let Some(k) = &mut config.unlink {
+        command::unlink(k);
     }
 }

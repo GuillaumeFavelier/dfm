@@ -89,5 +89,33 @@ pub fn link(config: &mut config::LinkConfig) {
             }
         }
     }
-    println!("Linking is done.");
+    println!("Links are created.");
+}
+
+pub fn unlink(config: &mut config::UnlinkConfig) {
+    let load_config = match &mut config.load {
+        Some(i) => i,
+        None => panic!("No configuration is loaded."),
+    };
+    load(load_config);
+    let content = match &mut load_config.content {
+        Some(j) => j,
+        None => panic!("No content is found."),
+    };
+    if !content.is_table() {
+        return;
+    }
+    if let Value::Table(t) = content {
+        for (src, dst) in t {
+            let mut str_dst = shellexpand::full(dst.as_str().unwrap()).unwrap();
+            match std::fs::remove_file(str_dst.to_mut()) {
+                Ok(_) => (),
+                Err(_) => {
+                    println!("{} cannot be unlinked.", src);
+                    continue
+                }
+            }
+        }
+    }
+    println!("Links are removed.");
 }
