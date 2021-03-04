@@ -18,26 +18,63 @@ fn parse_cli(config: &mut config::Config) {
                 .long("dest")
                 .value_name("DEST")
                 .about("Specify the destination path")
-                .required(true))
+                .required(false))
             .arg(Arg::new("force")
                 .short('f')
                 .long("force")
-                .about("Force file operations.")
+                .about("Force file operations")
+                .required(false)))
+        .subcommand(App::new("load")
+            .about("Load the index file in the repository")
+            .arg(Arg::new("path")
+                .short('p')
+                .long("path")
+                .value_name("PATH")
+                .about("Specify the index file path")
+                .required(false)))
+        .subcommand(App::new("view")
+            .about("Display the loaded configuration")
+            .arg(Arg::new("path")
+                .short('p')
+                .long("path")
+                .value_name("PATH")
+                .about("Specify the index file path")
+                .required(false)))
+        .subcommand(App::new("link")
+            .about("Create the links according to the loaded configuration")
+            .arg(Arg::new("path")
+                .short('p')
+                .long("path")
+                .value_name("PATH")
+                .about("Specify the index file path")
                 .required(false)))
         .get_matches();
 
     if let Some(ref matches) = matches.subcommand_matches("clone") {
         config.clone = Some(
-            config::CloneConfig {
-                url: match matches.value_of("url") {
-                    Some(k) => String::from(k),
-                    None => String::new(),
-                },
-                dest: match matches.value_of("dest") {
-                    Some(k) => String::from(k),
-                    None => String::new(),
-                },
-                force: matches.is_present("force")
+            config::CloneConfig::new(
+                matches.value_of("dest"),
+                matches.value_of("url"),
+                matches.is_present("force"),
+            )
+        )
+    }
+    if let Some(ref matches) = matches.subcommand_matches("load") {
+        config.load = Some(
+            config::LoadConfig::new(matches.value_of("path"))
+        )
+    }
+    if let Some(ref matches) = matches.subcommand_matches("view") {
+        config.view = Some(
+            config::ViewConfig{
+                load: Some(config::LoadConfig::new(matches.value_of("path")))
+            }
+        )
+    }
+    if let Some(_) = matches.subcommand_matches("link") {
+        config.link = Some(
+            config::LinkConfig{
+                load: Some(config::LoadConfig::new(matches.value_of("path")))
             }
         )
     }
@@ -46,8 +83,13 @@ fn parse_cli(config: &mut config::Config) {
 fn main() {
     let mut config = config::Config::new();
     parse_cli(&mut config);
-    match config.clone {
-        Some(c) => command::clone(c),
-        None => (),
+    if let Some(k) = &config.clone {
+        command::clone(k);
+    }
+    if let Some(k) = &mut config.load {
+        command::load(k);
+    }
+    if let Some(k) = &mut config.view {
+        command::view(k);
     }
 }
