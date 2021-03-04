@@ -24,14 +24,6 @@ fn parse_cli(config: &mut config::Config) {
                 .long("force")
                 .about("Force file operations")
                 .required(false)))
-        .subcommand(App::new("load")
-            .about("Load the index file in the repository")
-            .arg(Arg::new("path")
-                .short('p')
-                .long("path")
-                .value_name("PATH")
-                .about("Specify the index file path")
-                .required(false)))
         .subcommand(App::new("view")
             .about("Display the loaded configuration")
             .arg(Arg::new("path")
@@ -85,9 +77,6 @@ fn main() {
     parse_cli(&mut config);
     if let Some(k) = &config.clone {
         command::clone(k);
-    }
-    if let Some(k) = &mut config.load {
-        command::load(k);
     }
     if let Some(k) = &mut config.view {
         command::view(k);

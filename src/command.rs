@@ -41,23 +41,22 @@ pub fn load(config: &mut config::LoadConfig) {
 }
 
 pub fn view(config: &mut config::ViewConfig) {
-    match &mut config.load {
-        Some(i) => {
-            load(i);
-            match &mut i.content {
-                Some(j) => {
-                    if j.is_table() {
-                        if let Value::Table(l) = j {
-                            for (src, dst) in l {
-                                println!("{} {}", src, dst);
-                            }
-                        }
-                    }
-                }
-                None => panic!("No content is found"),
-            }
-        }
+    let load_config = match &mut config.load {
+        Some(i) => i,
         None => panic!("No configuration is loaded."),
+    };
+    load(load_config);
+    let content = match &mut load_config.content {
+        Some(j) => j,
+        None => panic!("No content is found."),
+    };
+    if !content.is_table() {
+        return;
+    }
+    if let Value::Table(t) = content {
+        for (src, dst) in t {
+            println!("{} {}", src, dst);
+        }
     }
 }
 
@@ -66,13 +65,11 @@ pub fn link(config: &mut config::LinkConfig) {
         Some(i) => i,
         None => panic!("No configuration is loaded."),
     };
-
     load(load_config);
     let content = match &mut load_config.content {
         Some(j) => j,
         None => panic!("No content is found."),
     };
-
     if !content.is_table() {
         return;
     }
