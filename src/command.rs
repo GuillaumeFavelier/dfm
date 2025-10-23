@@ -1,31 +1,25 @@
 use toml::Value;
 use shellexpand::{self};
 use std::os::unix::fs;
-use crate::config;
 
-pub fn load(config: &mut config::LoadConfig) {
+pub fn load(path: &String) -> Option<Value> {
     let default_tag = "linux";
-    let content = match std::fs::read_to_string(&config.path) {
+    let content = match std::fs::read_to_string(&path) {
         Ok(c) => c,
-        Err(e) => panic!("Failed to load {}: {}", config.path, e)
+        Err(e) => panic!("Failed to read {}: {}", path, e)
     };
     let parsed = match content.parse::<Value>() {
         Ok(c) => c,
-        Err(e) => panic!("Failed to parse {}: {}", config.path, e)
+        Err(e) => panic!("Failed to parse {}: {}", path, e)
     };
-    if let Some(k) = parsed.get(default_tag) {
-        config.content = Some(k.clone());
-    }
-    println!("Loaded {}", config.path);
+    let content = parsed.get(default_tag);
+    println!("Loaded {}", path);
+    content.cloned()
 }
 
-pub fn view(config: &mut config::ViewConfig) {
-    let load_config = match &mut config.load {
-        Some(i) => i,
-        None => panic!("No configuration is loaded."),
-    };
-    load(load_config);
-    let content = match &mut load_config.content {
+pub fn view(path: &String) {
+    let content = load(path);
+    let content = match content {
         Some(j) => j,
         None => panic!("No content is found."),
     };
@@ -39,13 +33,9 @@ pub fn view(config: &mut config::ViewConfig) {
     }
 }
 
-pub fn link(config: &mut config::LinkConfig) {
-    let load_config = match &mut config.load {
-        Some(i) => i,
-        None => panic!("No configuration is loaded."),
-    };
-    load(load_config);
-    let content = match &mut load_config.content {
+pub fn link(path: &String) {
+    let content = load(path);
+    let content = match content {
         Some(j) => j,
         None => panic!("No content is found."),
     };
@@ -56,7 +46,7 @@ pub fn link(config: &mut config::LinkConfig) {
         for (src, dst) in t {
             let mut str_dst = shellexpand::full(dst.as_str().unwrap()).unwrap();
             let mut src_path = std::path::PathBuf::new();
-            src_path.push(&load_config.path);
+            src_path.push(path);
             src_path.pop();
             src_path.push(src.as_str());
             match fs::symlink(src_path, str_dst.to_mut()) {
@@ -71,13 +61,9 @@ pub fn link(config: &mut config::LinkConfig) {
     println!("Links are created.");
 }
 
-pub fn unlink(config: &mut config::UnlinkConfig) {
-    let load_config = match &mut config.load {
-        Some(i) => i,
-        None => panic!("No configuration is loaded."),
-    };
-    load(load_config);
-    let content = match &mut load_config.content {
+pub fn unlink(path: &String) {
+    let content = load(path);
+    let content = match content {
         Some(j) => j,
         None => panic!("No content is found."),
     };
