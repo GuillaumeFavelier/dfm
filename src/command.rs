@@ -2,7 +2,7 @@ use toml::Value;
 use shellexpand::{self};
 use std::os::unix::fs;
 
-pub fn load(path: &String) -> Option<Value> {
+pub fn load(path: &String) -> Value {
     let default_tag = "linux";
     let content = match std::fs::read_to_string(&path) {
         Ok(c) => c,
@@ -13,19 +13,19 @@ pub fn load(path: &String) -> Option<Value> {
         Err(e) => panic!("Failed to parse {}: {}", path, e)
     };
     let content = parsed.get(default_tag);
-    println!("Loaded {}", path);
-    content.cloned()
-}
-
-pub fn view(path: &String) {
-    let content = load(path);
     let content = match content {
         Some(j) => j,
         None => panic!("No content is found."),
     };
     if !content.is_table() {
-        return;
+        panic!("The content found has invalid format.");
     }
+    println!("Configuration loaded from: {}", path);
+    content.clone()
+}
+
+pub fn view(path: &String) {
+    let content = load(path);
     if let Value::Table(t) = content {
         for (src, dst) in t {
             println!("{} {}", src, dst);
@@ -35,13 +35,6 @@ pub fn view(path: &String) {
 
 pub fn link(path: &String) {
     let content = load(path);
-    let content = match content {
-        Some(j) => j,
-        None => panic!("No content is found."),
-    };
-    if !content.is_table() {
-        return;
-    }
     if let Value::Table(t) = content {
         for (src, dst) in t {
             let mut str_dst = shellexpand::full(dst.as_str().unwrap()).unwrap();
@@ -63,13 +56,6 @@ pub fn link(path: &String) {
 
 pub fn unlink(path: &String) {
     let content = load(path);
-    let content = match content {
-        Some(j) => j,
-        None => panic!("No content is found."),
-    };
-    if !content.is_table() {
-        return;
-    }
     if let Value::Table(t) = content {
         for (src, dst) in t {
             let mut str_dst = shellexpand::full(dst.as_str().unwrap()).unwrap();
